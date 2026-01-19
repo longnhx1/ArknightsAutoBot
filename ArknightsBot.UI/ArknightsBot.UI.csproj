@@ -5,7 +5,7 @@
 		<TargetFramework>net8.0-windows</TargetFramework>
 		<Nullable>enable</Nullable>
 		<UseWPF>true</UseWPF>
-
+		<UseWindowsForms>true</UseWindowsForms>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<OutputPath>D:\Auto\Arknights\Project\ArknightsAutoBot\bin</OutputPath>
 
@@ -13,6 +13,12 @@
 
 	<ItemGroup>
 	  <PackageReference Include="HandyControl" Version="3.5.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="app.ico">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>
