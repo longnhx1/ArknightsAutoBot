@@ -1,0 +1,13 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="ArknightsBot.Logic/ArknightsBot.Logic.pyproj" Type="888888a0-9f3d-457c-b088-3a5042f75d52" Id="4a8aafde-6428-4e5c-a51a-cd39e4710cc9">
+    <Platform Project="AnyCPU" />
+    <Build Project="false" />
+  </Project>
+  <Project Path="ArknightsBot.UI/ArknightsBot.UI.csproj" />
+  <Project Path="ArknightsBot.Vision/ArknightsBot.Vision.vcxproj" Id="044570ef-5759-4294-878a-b6a2c88dcab2" />
+</Solution>
