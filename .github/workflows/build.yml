@@ -27,6 +27,8 @@ jobs:
       working-directory: ./ArknightsBot.Logic
       run: |
         pip install pyinstaller
+        # Thêm dòng này để cài các thư viện trong requirements.txt
+        pip install -r requirements.txt 
         pyinstaller --onefile --name ArknightsBot.Logic ArknightsBot.Logic.py
 
     - name: Setup .NET

@@ -5,6 +5,43 @@ import time
 import glob
 import json
 from adb_client import AdbClient
+from window_capture import WindowCapture
+
+import json
+import cv2
+from adb_client import AdbClient
+from window_capture import WindowCapture # Import file vừa tạo
+
+# Đọc cấu hình
+with open('settings.json', 'r') as f:
+    config = json.load(f)
+
+ADB_ADDRESS = config.get('adb_address', '127.0.0.1:7555')
+ENHANCED_MODE = config.get('enhanced_mode', 0)
+MUMU_PATH = config.get('mumu_path', '')
+
+adb = AdbClient(ADB_ADDRESS)
+win_cap = None
+
+# Nếu bật chế độ siêu tốc, khởi tạo Window Capture
+if ENHANCED_MODE:
+    print(">>> Đang bật chế độ Enhanced Mode (Chụp cửa sổ)...")
+    try:
+        # MuMu Player thường có tên cửa sổ là "MuMu Player" hoặc "MuMuPlayer-12.0"
+        # Bạn có thể dùng tool 'Spy++' để xem chính xác tên cửa sổ
+        win_cap = WindowCapture("MuMu Player") 
+        print(">>> Đã kết nối với cửa sổ MuMu!")
+    except Exception as e:
+        print(f">>> LỖI: Không tìm thấy cửa sổ giả lập. Quay về dùng ADB. ({e})")
+        ENHANCED_MODE = 0
+
+def take_screenshot():
+    if ENHANCED_MODE and win_cap:
+        # Cách 1: Chụp siêu tốc qua Window API (~15ms)
+        return win_cap.screenshot()
+    else:
+        # Cách 2: Chụp truyền thống qua ADB (~500ms)
+        return adb.screencap()
 
 # Giảm độ chính xác xuống một chút để nhận diện nhanh hơn
 THRESHOLD = 0.75 

@@ -24,6 +24,7 @@
     <Compile Include="adb_client.py" />
     <Compile Include="ArknightsBot.Logic.py" />
     <Compile Include="main.py" />
+    <Compile Include="window_capture.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="adb\" />

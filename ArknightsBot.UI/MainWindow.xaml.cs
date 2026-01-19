@@ -46,6 +46,8 @@ namespace ArknightsBot.UI
                 string json = File.ReadAllText(_settingsPath);
 
                 txtAdbAddress.Text = ParseJsonString(json, "adb_address", "127.0.0.1:7555");
+                txtMumuPath.Text = ParseJsonString(json, "mumu_path", "");
+                chkEnhancedMode.IsChecked = ParseJsonValue(json, "enhanced_mode", 0.0) == 1.0;
 
                 numStart.Value = ParseJsonValue(json, "delay_start", 2.0);
                 numSquad.Value = ParseJsonValue(json, "delay_squad", 5.0);
@@ -70,7 +72,8 @@ $@"{{
   ""delay_retreat"": {numRetreat.Value},
   ""delay_confirm"": {numConfirm.Value}
 }}";
-
+            json += $"  \"mumu_path\": \"{txtMumuPath.Text.Replace("\\", "\\\\")}\",\n"; // Chú ý escape dấu gạch chéo
+            json += $"  \"enhanced_mode\": {(chkEnhancedMode.IsChecked == true ? 1 : 0)},\n";
             try
             {
                 File.WriteAllText(_settingsPath, json);
@@ -194,6 +197,17 @@ $@"{{
                 btnStart.IsEnabled = true;
                 btnStop.IsEnabled = false;
             });
+        }
+
+        private void BtnBrowseMumu_Click(object sender, RoutedEventArgs e)
+        {
+            // Mở hộp thoại chọn file
+            var dialog = new Microsoft.Win32.OpenFileDialog();
+            dialog.Filter = "MuMu Player|*.exe"; // Chỉ chọn file exe
+            if (dialog.ShowDialog() == true)
+            {
+                txtMumuPath.Text = dialog.FileName;
+            }
         }
 
         private void KillBotProcess()
