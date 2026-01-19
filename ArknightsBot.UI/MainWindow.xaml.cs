@@ -21,7 +21,7 @@ namespace ArknightsBot.UI
                 InitializeComponent();
 
                 // Xác định đường dẫn file settings.json (nằm cùng chỗ với file Python)
-                _settingsPath = Path.GetFullPath(@"D:\Auto\Arknights\Project\ArknightsAutoBot\ArknightsBot.Logic\settings.json");
+                _settingsPath = Path.GetFullPath(@"..\ArknightsBot.Logic\settings.json");
 
                 // Tải cài đặt lên giao diện
                 LoadSettings();
@@ -123,36 +123,48 @@ namespace ArknightsBot.UI
 
         // ---------------------------------
 
-        // (GIỮ NGUYÊN PHẦN CODE START/STOP/LOG CŨ Ở ĐÂY...)
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
-            // ... Code cũ ...
             txtLog.AppendText(">>> Đang khởi động Bot...\n");
-            string scriptPath = Path.GetFullPath(@"D:\Auto\Arknights\Project\ArknightsAutoBot\ArknightsBot.Logic\ArknightsBot.Logic.py");
-            if (!File.Exists(scriptPath)) { MessageBox.Show("Không tìm thấy file Python!"); return; }
+
+            // 1. Đường dẫn file .exe Python (Nằm cùng thư mục với file UI)
+            string botExePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ArknightsBot.Logic.exe");
+
+            if (!File.Exists(botExePath))
+            {
+                MessageBox.Show("Không tìm thấy file 'ArknightsBot.Logic.exe'!\nHãy đảm bảo bạn đã copy nó vào cùng thư mục.");
+                return;
+            }
 
             var startInfo = new ProcessStartInfo
             {
-                FileName = "python",
-                Arguments = $"\"{scriptPath}\"",
+                FileName = botExePath,      // Gọi thẳng file EXE
+                Arguments = "",             // Không cần tham số script nữa
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                CreateNoWindow = true,
+                CreateNoWindow = true,      // Ẩn cửa sổ đen console
                 StandardOutputEncoding = System.Text.Encoding.UTF8,
                 StandardErrorEncoding = System.Text.Encoding.UTF8
             };
+
             _botProcess = new Process { StartInfo = startInfo };
+            // ... (Phần gán sự kiện và Start giữ nguyên) ...
             _botProcess.OutputDataReceived += Bot_OutputDataReceived;
             _botProcess.ErrorDataReceived += Bot_OutputDataReceived;
+
             try
             {
                 _botProcess.Start();
                 _botProcess.BeginOutputReadLine();
                 _botProcess.BeginErrorReadLine();
-                btnStart.IsEnabled = false; btnStop.IsEnabled = true;
+                btnStart.IsEnabled = false;
+                btnStop.IsEnabled = true;
             }
-            catch (Exception ex) { MessageBox.Show($"Lỗi: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khởi động: {ex.Message}");
+            }
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
