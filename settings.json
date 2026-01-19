@@ -1,0 +1,8 @@
+{
+  "adb_address": "127.0.0.1:16384",
+  "delay_start": 2,
+  "delay_squad": 5,
+  "delay_settings": 0.5,
+  "delay_retreat": 0.2,
+  "delay_confirm": 0.2
+}
