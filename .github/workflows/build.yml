@@ -2,10 +2,12 @@ name: Build Arknights Bot
 
 on:
   push:
-    branches: [ "master", "dev" ]
+    branches: [ "master" ] # CHỈ chạy tự động khi push vào master
     tags:
-      - 'v*' 
-  workflow_dispatch:
+      - 'v*' # Chạy khi tạo thẻ phiên bản (v1.0, v1.1...)
+  
+  # Giữ lại cái này để nếu cần thiết, bạn vẫn có thể vào web GitHub bấm nút "Run workflow" để ép nó build nhánh dev thủ công
+  workflow_dispatch: 
 
 permissions:
   contents: write
@@ -26,6 +28,7 @@ jobs:
     - name: Build Python Logic
       working-directory: ./ArknightsBot.Logic
       run: |
+        # Cài đầy đủ thư viện (bao gồm cả thư viện cho tính năng chụp màn hình siêu tốc)
         pip install pyinstaller pywin32 numpy opencv-python
         pyinstaller --onefile --name ArknightsBot.Logic ArknightsBot.Logic.py
 
@@ -59,13 +62,12 @@ jobs:
         powershell Copy-Item -Path adb/* -Destination Release/adb -Recurse
         copy settings.json Release/
 
-    # --- 4. NÉN FILE ZIP (Để dùng cho cả 2 mục đích) ---
+    # --- 4. NÉN FILE ZIP ---
     - name: Zip Release
       run: powershell Compress-Archive -Path Release/* -DestinationPath ArknightsAutoBot.zip
 
-    # --- 5. UPLOAD ARTIFACT (CHO NHÁNH DEV/TEST) ---
-    # Bước này giúp bạn thấy file tải về ở mục Artifacts sau khi build xong
-    - name: Upload Artifact for Dev
+    # --- 5. UPLOAD ARTIFACT (CHO MASTER HOẶC CHẠY THỦ CÔNG) ---
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ArknightsAutoBot_Build
