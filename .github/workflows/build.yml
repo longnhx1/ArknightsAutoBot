@@ -2,13 +2,13 @@ name: Build Arknights Bot
 
 on:
   push:
-    branches: [ "master", "dev" ] 
+    branches: [ "master", "dev" ]
     tags:
-      - 'v*' # QUAN TRỌNG: Chạy khi có tag bắt đầu bằng v (vd: v1.0, v1.0.1)
+      - 'v*' 
   workflow_dispatch:
 
 permissions:
-  contents: write # QUAN TRỌNG: Cấp quyền cho Bot được tạo Release
+  contents: write
 
 jobs:
   build:
@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    # --- CÁC BƯỚC BUILD CŨ (GIỮ NGUYÊN) ---
+    # --- 1. SETUP & BUILD PYTHON ---
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
@@ -26,11 +26,10 @@ jobs:
     - name: Build Python Logic
       working-directory: ./ArknightsBot.Logic
       run: |
-        pip install pyinstaller
-        # Thêm dòng này để cài các thư viện trong requirements.txt
-        pip install -r requirements.txt 
+        pip install pyinstaller pywin32 numpy opencv-python
         pyinstaller --onefile --name ArknightsBot.Logic ArknightsBot.Logic.py
 
+    # --- 2. SETUP & BUILD C# ---
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
@@ -40,6 +39,7 @@ jobs:
       working-directory: ./ArknightsBot.UI
       run: dotnet publish -c Release -r win-x64 --self-contained false -o ./publish
 
+    # --- 3. GOM FILE VÀO FOLDER RELEASE ---
     - name: Organize Files
       run: |
         mkdir Release
@@ -59,20 +59,25 @@ jobs:
         powershell Copy-Item -Path adb/* -Destination Release/adb -Recurse
         copy settings.json Release/
 
-    # --- BƯỚC MỚI: NÉN FILE THỦ CÔNG ---
-    # Nén folder Release thành file .zip để up lên trang Release
+    # --- 4. NÉN FILE ZIP (Để dùng cho cả 2 mục đích) ---
     - name: Zip Release
       run: powershell Compress-Archive -Path Release/* -DestinationPath ArknightsAutoBot.zip
 
-    # --- BƯỚC MỚI: TẠO TRANG RELEASE ---
-    # Chỉ chạy bước này nếu trigger là Tag (vd: v1.0)
+    # --- 5. UPLOAD ARTIFACT (CHO NHÁNH DEV/TEST) ---
+    # Bước này giúp bạn thấy file tải về ở mục Artifacts sau khi build xong
+    - name: Upload Artifact for Dev
+      uses: actions/upload-artifact@v4
+      with:
+        name: ArknightsAutoBot_Build
+        path: ArknightsAutoBot.zip
+
+    # --- 6. TẠO RELEASE (CHỈ KHI CÓ TAG v...) ---
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
-        files: ArknightsAutoBot.zip # File sẽ đính kèm vào trang Release
-        name: Release ${{ github.ref_name }} # Tên Release (vd: Release v1.0)
-        body: "Bản cập nhật tự động từ GitHub Actions."
+        files: ArknightsAutoBot.zip
+        name: Release ${{ github.ref_name }}
         draft: false
         prerelease: false
       env:
