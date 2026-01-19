@@ -21,20 +21,22 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="adb_client.py" />
     <Compile Include="ArknightsBot.Logic.py" />
     <Compile Include="main.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="adb\" />
-    <Folder Include="images\" />
+    <Folder Include="templates\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="adb\adb.exe" />
     <Content Include="adb\AdbWinApi.dll" />
     <Content Include="adb\AdbWinUsbApi.dll" />
-    <Content Include="images\btn_confirm_quit.png" />
-    <Content Include="images\btn_retreat_menu.png" />
-    <Content Include="images\btn_settings.png" />
+    <Content Include="settings.json" />
+    <Content Include="templates\btn_confirm.png" />
+    <Content Include="templates\btn_settings.png" />
+    <Content Include="templates\btn_retreat.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
