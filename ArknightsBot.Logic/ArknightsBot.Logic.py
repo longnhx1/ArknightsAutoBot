@@ -19,6 +19,13 @@ SETTINGS = {
     "delay_confirm": 0.2
 }
 
+def get_base_path():
+    # Nếu đang chạy dạng file .exe (đã đóng gói)
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    # Nếu đang chạy code Python bình thường
+    return os.path.dirname(os.path.abspath(__file__))
+
 def load_settings(current_dir):
     global SETTINGS
     json_path = os.path.join(current_dir, "settings.json")
@@ -75,10 +82,10 @@ def main():
     print("--- ARKNIGHTS RAM-MODE FARM ---")
     sys.stdout.flush() 
     
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    current_dir = get_base_path()
     load_settings(current_dir)
 
-    bin_dir = os.path.abspath(os.path.join(current_dir, "..", "bin"))
+    bin_dir = os.path.join(current_dir, "bin") 
     vision_dll_path = os.path.join(bin_dir, "ArknightsBot.Vision.dll")
 
     if hasattr(os, 'add_dll_directory') and os.path.exists(bin_dir):

@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
-using System.Windows.Threading;
 
 namespace ArknightsBot.UI
 {
@@ -11,8 +10,11 @@ namespace ArknightsBot.UI
         private Process _botProcess;
         private int _farmCount = 0;
 
-        // Đường dẫn file cài đặt
-        private string _settingsPath;
+        // Đường dẫn settings.json (nằm cùng thư mục với UI.exe)
+        private readonly string _settingsPath;
+
+        // Cờ phân biệt Manual Stop hay Bot tự sập
+        private bool _isManualStop = false;
 
         public MainWindow()
         {
@@ -20,85 +22,77 @@ namespace ArknightsBot.UI
             {
                 InitializeComponent();
 
-                // Xác định đường dẫn file settings.json (nằm cùng chỗ với file Python)
-                _settingsPath = Path.GetFullPath(@"D:\Auto\Arknights\Project\ArknightsAutoBot\ArknightsBot.Logic\settings.json");
+                _settingsPath = Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory,
+                    "settings.json"
+                );
 
-                // Tải cài đặt lên giao diện
                 LoadSettings();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("LỖI KHỞI ĐỘNG:\n" + ex.ToString());
+                MessageBox.Show("LỖI KHỞI ĐỘNG UI:\n" + ex);
             }
         }
 
-        // --- CODE XỬ LÝ SETTINGS MỚI ---
-        // 1. Sửa hàm LoadSettings
+        #region SETTINGS (LOAD / SAVE)
+
         private void LoadSettings()
         {
-            if (File.Exists(_settingsPath))
+            if (!File.Exists(_settingsPath)) return;
+
+            try
             {
-                try
-                {
-                    string json = File.ReadAllText(_settingsPath);
+                string json = File.ReadAllText(_settingsPath);
 
-                    // Đọc chuỗi ADB (Mới)
-                    txtAdbAddress.Text = ParseJsonString(json, "adb_address", "127.0.0.1:7555");
+                txtAdbAddress.Text = ParseJsonString(json, "adb_address", "127.0.0.1:7555");
 
-                    // Đọc các số Delay (Cũ)
-                    numStart.Value = ParseJsonValue(json, "delay_start", 2.0);
-                    numSquad.Value = ParseJsonValue(json, "delay_squad", 5.0);
-                    numSettings.Value = ParseJsonValue(json, "delay_settings", 2.0);
-                    numRetreat.Value = ParseJsonValue(json, "delay_retreat", 1.5);
-                    numConfirm.Value = ParseJsonValue(json, "delay_confirm", 4.0);
-                }
-                catch { }
+                numStart.Value = ParseJsonValue(json, "delay_start", 2.0);
+                numSquad.Value = ParseJsonValue(json, "delay_squad", 5.0);
+                numSettings.Value = ParseJsonValue(json, "delay_settings", 2.0);
+                numRetreat.Value = ParseJsonValue(json, "delay_retreat", 1.5);
+                numConfirm.Value = ParseJsonValue(json, "delay_confirm", 4.0);
+            }
+            catch
+            {
+                // Bỏ qua nếu file lỗi format
             }
         }
 
-        // 2. Sửa hàm BtnSave_Click
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
-            // Lưu chuỗi JSON (Chú ý cú pháp có dấu ngoặc kép cho chuỗi)
-            string json = "{\n";
-            json += $"  \"adb_address\": \"{txtAdbAddress.Text}\",\n"; // MỚI
-            json += $"  \"delay_start\": {numStart.Value},\n";
-            json += $"  \"delay_squad\": {numSquad.Value},\n";
-            json += $"  \"delay_settings\": {numSettings.Value},\n";
-            json += $"  \"delay_retreat\": {numRetreat.Value},\n";
-            json += $"  \"delay_confirm\": {numConfirm.Value}\n";
-            json += "}";
+            string json =
+$@"{{
+  ""adb_address"": ""{txtAdbAddress.Text}"",
+  ""delay_start"": {numStart.Value},
+  ""delay_squad"": {numSquad.Value},
+  ""delay_settings"": {numSettings.Value},
+  ""delay_retreat"": {numRetreat.Value},
+  ""delay_confirm"": {numConfirm.Value}
+}}";
 
             try
             {
                 File.WriteAllText(_settingsPath, json);
-                HandyControl.Controls.Growl.Success("Đã lưu cấu hình thành công!");
+                HandyControl.Controls.Growl.Success("Đã lưu cấu hình!");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi lưu file: " + ex.Message);
+                MessageBox.Show("Lỗi lưu settings.json:\n" + ex.Message);
             }
         }
 
-        // 3. THÊM hàm ParseJsonString (Vì logic đọc chuỗi khác đọc số)
         private string ParseJsonString(string json, string key, string defaultValue)
         {
             try
             {
                 int keyIndex = json.IndexOf($"\"{key}\"");
-                if (keyIndex == -1) return defaultValue;
+                if (keyIndex < 0) return defaultValue;
 
-                int colonIndex = json.IndexOf(':', keyIndex);
+                int start = json.IndexOf('"', json.IndexOf(':', keyIndex)) + 1;
+                int end = json.IndexOf('"', start);
 
-                // Tìm dấu nháy kép mở đầu giá trị
-                int startQuote = json.IndexOf('"', colonIndex);
-                if (startQuote == -1) return defaultValue;
-
-                // Tìm dấu nháy kép kết thúc
-                int endQuote = json.IndexOf('"', startQuote + 1);
-                if (endQuote == -1) return defaultValue;
-
-                return json.Substring(startQuote + 1, endQuote - startQuote - 1);
+                return json.Substring(start, end - start);
             }
             catch { return defaultValue; }
         }
@@ -107,71 +101,137 @@ namespace ArknightsBot.UI
         {
             try
             {
-                // Tìm chuỗi: "key": giá_trị
                 int keyIndex = json.IndexOf($"\"{key}\"");
-                if (keyIndex == -1) return defaultValue;
+                if (keyIndex < 0) return defaultValue;
 
-                int colonIndex = json.IndexOf(':', keyIndex);
-                int commaIndex = json.IndexOf(',', colonIndex);
-                if (commaIndex == -1) commaIndex = json.IndexOf('}', colonIndex);
+                int colon = json.IndexOf(':', keyIndex);
+                int comma = json.IndexOf(',', colon);
+                if (comma < 0) comma = json.IndexOf('}', colon);
 
-                string valueStr = json.Substring(colonIndex + 1, commaIndex - colonIndex - 1).Trim();
-                return double.Parse(valueStr, System.Globalization.CultureInfo.InvariantCulture);
+                string value = json.Substring(colon + 1, comma - colon - 1).Trim();
+                return double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
             }
             catch { return defaultValue; }
         }
 
-        // ---------------------------------
+        #endregion
 
-        // (GIỮ NGUYÊN PHẦN CODE START/STOP/LOG CŨ Ở ĐÂY...)
+        #region START / STOP BOT (ĐÃ FIX)
+
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
-            // ... Code cũ ...
-            txtLog.AppendText(">>> Đang khởi động Bot...\n");
-            string scriptPath = Path.GetFullPath(@"D:\Auto\Arknights\Project\ArknightsAutoBot\ArknightsBot.Logic\ArknightsBot.Logic.py");
-            if (!File.Exists(scriptPath)) { MessageBox.Show("Không tìm thấy file Python!"); return; }
+            _isManualStop = false;
 
-            var startInfo = new ProcessStartInfo
+            txtLog.AppendText(">>> Đang khởi động Bot...\n");
+
+            string botExePath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "ArknightsBot.Logic.exe"
+            );
+
+            if (!File.Exists(botExePath))
             {
-                FileName = "python",
-                Arguments = $"\"{scriptPath}\"",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                StandardOutputEncoding = System.Text.Encoding.UTF8,
-                StandardErrorEncoding = System.Text.Encoding.UTF8
+                MessageBox.Show("Không tìm thấy ArknightsBot.Logic.exe");
+                return;
+            }
+
+            _botProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = botExePath,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8,
+                    StandardErrorEncoding = System.Text.Encoding.UTF8
+                },
+                EnableRaisingEvents = true
             };
-            _botProcess = new Process { StartInfo = startInfo };
+
             _botProcess.OutputDataReceived += Bot_OutputDataReceived;
             _botProcess.ErrorDataReceived += Bot_OutputDataReceived;
+            _botProcess.Exited += Bot_Exited;
+
             try
             {
                 _botProcess.Start();
                 _botProcess.BeginOutputReadLine();
                 _botProcess.BeginErrorReadLine();
-                btnStart.IsEnabled = false; btnStop.IsEnabled = true;
+
+                btnStart.IsEnabled = false;
+                btnStop.IsEnabled = true;
             }
-            catch (Exception ex) { MessageBox.Show($"Lỗi: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi Start Bot:\n" + ex.Message);
+            }
         }
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
         {
-            if (_botProcess != null && !_botProcess.HasExited)
-            {
-                _botProcess.Kill();
-                txtLog.AppendText(">>> ĐÃ DỪNG BOT.\n");
-                txtLog.ScrollToEnd();
-            }
-            btnStart.IsEnabled = true; btnStop.IsEnabled = false;
+            _isManualStop = true;
+
+            KillBotProcess();
+
+            txtLog.AppendText(">>> ĐÃ DỪNG BOT (MANUAL STOP)\n");
+            txtLog.ScrollToEnd();
+
+            btnStart.IsEnabled = true;
+            btnStop.IsEnabled = false;
         }
+
+        private void Bot_Exited(object sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                if (_isManualStop) return;
+
+                txtLog.AppendText("!!! BOT ĐÃ TẮT ĐỘT NGỘT !!!\n");
+                txtLog.ScrollToEnd();
+
+                btnStart.IsEnabled = true;
+                btnStop.IsEnabled = false;
+            });
+        }
+
+        private void KillBotProcess()
+        {
+            if (_botProcess == null || _botProcess.HasExited) return;
+
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "taskkill",
+                    Arguments = $"/F /T /PID {_botProcess.Id}",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                });
+            }
+            catch { }
+            finally
+            {
+                _botProcess.Dispose();
+                _botProcess = null;
+            }
+        }
+
+        #endregion
 
         private void Bot_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (string.IsNullOrEmpty(e.Data)) return;
-            this.Dispatcher.Invoke(() =>
+
+            Dispatcher.Invoke(() =>
             {
-                if (e.Data.Contains("[STATS]")) { _farmCount++; lblCounter.Text = _farmCount.ToString(); }
+                if (e.Data.Contains("[STATS]"))
+                {
+                    _farmCount++;
+                    lblCounter.Text = _farmCount.ToString();
+                }
+
                 txtLog.AppendText(e.Data + "\n");
                 txtLog.ScrollToEnd();
             });
@@ -179,8 +239,10 @@ namespace ArknightsBot.UI
 
         protected override void OnClosed(EventArgs e)
         {
-            if (btnStop.IsEnabled) BtnStop_Click(null, null);
+            _isManualStop = true;
+            KillBotProcess();
             base.OnClosed(e);
+            Application.Current.Shutdown();
         }
     }
 }
