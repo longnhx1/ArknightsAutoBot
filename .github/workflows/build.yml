@@ -1,79 +1,66 @@
 name: Build Arknights Bot
 
-# Chạy khi có code push vào nhánh main
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch: # Cho phép bấm chạy thủ công
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    # 1. Tải code về máy ảo của GitHub
+    # 1. Tải code về
     - uses: actions/checkout@v3
 
-    # 2. Cài đặt Python
+    # 2. Setup Python & Build Logic
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10' 
 
-    # 3. Cài đặt thư viện Python & PyInstaller
-    - name: Install Python Dependencies
-      run: |
-        pip install pyinstaller
-        # Nếu code bạn có dùng thư viện ngoài (vd: opencv-python, numpy) thì cài thêm ở đây
-        # pip install opencv-python numpy 
-
-    # 4. Đóng gói Python (.py -> .exe)
     - name: Build Python Logic
       working-directory: ./ArknightsBot.Logic
       run: |
+        pip install pyinstaller
         pyinstaller --onefile --name ArknightsBot.Logic ArknightsBot.Logic.py
-      # Sau bước này, file exe sẽ nằm ở ArknightsBot.Logic/dist/ArknightsBot.Logic.exe
 
-    # 5. Cài đặt .NET (C#)
+    # 3. Setup .NET & Build UI
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
 
-    # 6. Build C# WPF App
     - name: Build C# UI
       working-directory: ./ArknightsBot.UI
-      # Dùng lệnh Publish để nó tự gom hết DLL (HandyControl) vào 1 chỗ
       run: dotnet publish -c Release -r win-x64 --self-contained false -o ./publish
 
-    # 7. TẠO THƯ MỤC "Release" VÀ GOM HÀNG
-    - name: Organize Files
+    # 4. GOM HÀNG (Quan trọng)
+    - name: Organize Release Folder
       run: |
         mkdir Release
         mkdir Release/bin
         mkdir Release/adb
         mkdir Release/templates
 
-        # Copy C# EXE và các file phụ tùng (HandyControl.dll, json config...)
-        copy ArknightsBot.UI/publish/* Release/
-
-        # Copy Python EXE
+        # Copy file chạy
         copy ArknightsBot.Logic/dist/ArknightsBot.Logic.exe Release/
+        copy ArknightsBot.UI/publish/ArknightsBot.UI.exe Release/
+        copy ArknightsBot.UI/publish/HandyControl.dll Release/
+        copy ArknightsBot.UI/publish/ArknightsBot.UI.deps.json Release/
+        copy ArknightsBot.UI/publish/ArknightsBot.UI.runtimeconfig.json Release/
+        copy ArknightsBot.UI/publish/ArknightsBot.UI.dll Release/
 
-        # Copy DLL xử lý ảnh (Vision + OpenCV)
+        # Copy phụ tùng (ADB, DLL, Ảnh)
+        # Lưu ý: Các folder này PHẢI có trên GitHub thì lệnh này mới chạy được
         copy bin/* Release/bin/
+        copy templates/* Release/templates/
+        powershell Copy-Item -Path adb/* -Destination Release/adb -Recurse
 
-        # Copy ADB (Lưu ý: copy đệ quy /E /H /C /I trong cmd hoặc dùng PowerShell)
-        # Ở đây dùng PowerShell mặc định của GitHub runner
-        Copy-Item -Path adb/* -Destination Release/adb -Recurse
-        
-        # Copy Templates
-        Copy-Item -Path templates/* -Destination Release/templates -Recurse
-
-        # Copy Settings mặc định
+        # Copy Settings
         copy settings.json Release/
 
-    # 8. Nén thành file ZIP và đưa lên cho bạn tải về
+    # 5. Nén và Upload
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
