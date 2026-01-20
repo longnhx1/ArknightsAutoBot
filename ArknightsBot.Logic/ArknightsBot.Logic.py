@@ -7,10 +7,10 @@ import json
 from adb_client import AdbClient
 from window_capture import WindowCapture
 
-import json
-import cv2
-from adb_client import AdbClient
-from window_capture import WindowCapture # Import file vừa tạo
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 # Đọc cấu hình
 with open('settings.json', 'r') as f:
