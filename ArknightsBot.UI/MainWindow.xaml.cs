@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json; // Dùng để lưu file cấu hình xịn
@@ -38,8 +38,13 @@ namespace ArknightsBot.UI
 
                 // Cách parse thủ công đơn giản (giữ nguyên logic của bạn để tránh lỗi thư viện)
                 txtAdbAddress.Text = ParseJsonString(json, "adb_address", "127.0.0.1:7555");
+                string region = ParseJsonString(json, "region", "EN");
+                cboRegion.SelectedIndex = region == "JP" ? 1 : 0;
+                
                 txtMumuPath.Text = ParseJsonString(json, "mumu_path", "");
                 chkEnhancedMode.IsChecked = ParseJsonValue(json, "enhanced_mode", 0.0) == 1.0;
+                chkDebugMode.IsChecked = ParseJsonValue(json, "debug_mode", 0.0) == 1.0;
+                numDebugDelay.Text = ParseJsonValue(json, "debug_delay", 1.0).ToString();
 
                 numStart.Text = ParseJsonValue(json, "delay_start", 2.0).ToString();
                 numSquad.Text = ParseJsonValue(json, "delay_squad", 5.0).ToString();
@@ -65,8 +70,11 @@ namespace ArknightsBot.UI
                 var settingsData = new
                 {
                     adb_address = txtAdbAddress.Text,
+                    region = cboRegion.SelectedIndex == 1 ? "JP" : "EN",
                     mumu_path = txtMumuPath.Text, // Tự động escape ký tự đặc biệt
                     enhanced_mode = (chkEnhancedMode.IsChecked == true ? 1 : 0),
+                    debug_mode = (chkDebugMode.IsChecked == true ? 1 : 0),
+                    debug_delay = double.TryParse(numDebugDelay.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double dDebugDelay) ? dDebugDelay : 1.0,
                     delay_start = dStart,
                     delay_squad = dSquad,
                     delay_settings = dSettings,
@@ -118,7 +126,52 @@ namespace ArknightsBot.UI
 
         #endregion
 
-        #region 2. XỬ LÝ MUMU PATH (CODE MỚI)
+        #region 2. XỬ LÝ MUMU PATH & ADB AUTO DETECT
+
+        private void BtnAutoDetectAdb_Click(object sender, RoutedEventArgs e)
+        {
+            LogToUI(">>> Đang quét tìm giả lập...", "#eab308");
+            string[] ports = { "16384", "7555", "5555", "62001", "62025" };
+            string adbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "adb", "adb.exe");
+            
+            if (!File.Exists(adbPath)) {
+                HandyControl.Controls.Growl.Error("Không tìm thấy adb.exe trong thư mục con!");
+                return;
+            }
+
+            bool found = false;
+            foreach (var port in ports)
+            {
+                string address = "127.0.0.1:" + port;
+                try {
+                    var process = new Process {
+                        StartInfo = new ProcessStartInfo {
+                            FileName = adbPath,
+                            Arguments = $"connect {address}",
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            CreateNoWindow = true
+                        }
+                    };
+                    process.Start();
+                    string output = process.StandardOutput.ReadToEnd();
+                    process.WaitForExit();
+                    
+                    if (output.Contains("connected to") || output.Contains("already connected")) {
+                        txtAdbAddress.Text = address;
+                        HandyControl.Controls.Growl.Success($"Đã tìm thấy giả lập tại cổng {port}!");
+                        LogToUI($">>> Auto Detect: Tìm thấy giả lập tại {address}", "#22c55e");
+                        found = true;
+                        break;
+                    }
+                } catch { }
+            }
+            
+            if (!found) {
+                HandyControl.Controls.Growl.Warning("Không tìm thấy! Hãy đảm bảo giả lập đang chạy.");
+                LogToUI(">>> Auto Detect: Thất bại. Không thấy giả lập nào.", "#ef4444");
+            }
+        }
 
         private void BtnBrowseMumu_Click(object sender, RoutedEventArgs e)
         {

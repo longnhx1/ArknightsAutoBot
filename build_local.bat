@@ -7,7 +7,7 @@ echo ==========================================
 echo.
 echo [1/4] Dang build Python Logic...
 cd ArknightsBot.Logic
-pyinstaller --onefile --name ArknightsBot.Logic ArknightsBot.Logic.py
+pyinstaller --onefile --name ArknightsBot.Logic --icon=..\icon.ico ArknightsBot.Logic.py
 if %errorlevel% neq 0 goto :error
 cd ..
 
@@ -36,7 +36,7 @@ copy ArknightsBot.UI\publish\ArknightsBot.UI.runtimeconfig.json Release_Local\
 copy ArknightsBot.UI\publish\ArknightsBot.UI.dll Release_Local\
 
 copy bin\* Release_Local\bin\
-copy templates\* Release_Local\templates\
+xcopy /E /I /Y templates Release_Local\templates
 xcopy /E /I /Y adb Release_Local\adb
 copy settings.json Release_Local\
 

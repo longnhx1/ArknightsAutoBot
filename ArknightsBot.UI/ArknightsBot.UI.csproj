@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows</TargetFramework>
@@ -7,6 +7,7 @@
 		<UseWindowsForms>true</UseWindowsForms>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<OutputPath>D:\Auto\Arknights\Project\ArknightsAutoBot\bin</OutputPath>
+		<ApplicationIcon>icon.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -14,6 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Resource Include="icon.png" />
 	  <None Update="app.ico">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
