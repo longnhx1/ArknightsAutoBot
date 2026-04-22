@@ -4,27 +4,19 @@
 ![Release](https://img.shields.io/github/v/release/longnhx1/ArknightsAutoBot)
 ![Platform](https://img.shields.io/badge/Platform-Windows-blue)
 
-Tool hỗ trợ tự động cày cuốc (Auto Farm) game Arknights trên giả lập, được xây dựng với kiến trúc đa ngôn ngữ (C# UI + Python Logic + C++ Vision) nhằm tối ưu hiệu suất và trải nghiệm người dùng.
+Công cụ hỗ trợ Arknights hiệu suất cao với giao diện WPF hiện đại, tích hợp engine nhận diện hình ảnh C++ và chế độ chụp màn hình siêu tốc (Enhanced Mode) dành cho MuMu Player.
 
 ## ✨ Tính năng nổi bật
 
-* **🎯 Auto Farm thông minh:** Tự động lặp lại các màn chơi (1-7, LS-6, CE-6...), tự cắn thuốc (Sanity Potion) hoặc Originite Prime.
-* **🚀 Chạy nền (System Tray):** Tắt cửa sổ chính tool vẫn chạy ngầm dưới khay hệ thống, không chiếm chỗ trên Taskbar.
-* **⚡ Siêu nhẹ & Portable:** Không cần cài đặt Python/VS, tải về giải nén là chạy.
-* **👁️ Xử lý ảnh chính xác:** Sử dụng OpenCV C++ để nhận diện hình ảnh tốc độ cao.
-* **🔄 Auto Reconnect:** Tự động kết nối lại ADB nếu giả lập bị lag/dis.
-
-## 🤝 Combo Tối Ưu (Recommended Setup)
-
-Tool được thiết kế để hoạt động hoàn hảo khi kết hợp với:
-
-1.  **Arknights BLACKMOD:** Dùng bản Mod (High Damage) để clear map siêu tốc.
-2.  **MaaAssistantArknights (MAA):** Dùng để Auto chế độ **Integrated Strategies (I.S)**.
-3.  **Arknights Auto Bot (Tool này):** Quản lý quy trình farm tài nguyên cơ bản, giữ kết nối ADB và chạy nền nhẹ nhàng khi bạn treo máy làm việc khác.
+* **⚡ Enhanced Mode (Siêu tốc):** Chụp ảnh màn hình trực tiếp qua Window API dành riêng cho MuMu Player, giảm độ trễ từ ~500ms (ADB) xuống còn ~15ms.
+* **👁️ Engine Vision C++:** Sử dụng OpenCV C++ DLL để nhận diện hình ảnh tốc độ cao, đảm bảo độ chính xác và tiết kiệm tài nguyên.
+* **🔄 Auto Retreat (Instant Win Helper):** Tự động thực hiện quy trình Cài đặt -> Rút lui -> Xác nhận. Đặc biệt hiệu quả khi sử dụng cùng các bản Mod Instant Win để clear map siêu tốc.
+* **🌍 Đa ngôn ngữ (Region Support):** Hỗ trợ nhận diện hình ảnh trên cả server Global (EN) và Nhật Bản (JP).
+* **🚀 Giao diện hiện đại (Rhodes Island Style):** Được xây dựng bằng WPF và HandyControl, mang lại trải nghiệm chuyên nghiệp và mượt mà.
 
 ## 🛠️ Yêu cầu hệ thống
 
-* **Giả lập:** MuMu Player, LDPlayer, Nox...
+* **Giả lập:** MuMu Player 12 (khuyên dùng để bật Enhanced Mode), LDPlayer, Nox...
 * **Độ phân giải:** `1280 x 720` (DPI 240).
 * **ADB:** Đã bật (Root/Debug).
 
@@ -32,20 +24,20 @@ Tool được thiết kế để hoạt động hoàn hảo khi kết hợp vớ
 
 1.  Tải về từ mục **[Releases](https://github.com/longnhx1/ArknightsAutoBot/releases)**.
 2.  Giải nén và chạy file **`ArknightsBot.UI.exe`**.
-3.  Nhập địa chỉ ADB (VD: `127.0.0.1:7555`) và bấm **Start**.
+3.  Nhấn nút **Auto** để tự động tìm cổng ADB hoặc nhập thủ công (VD: `127.0.0.1:16384` cho MuMu).
+4.  Bấm **SAVE CONFIGURATION** và sau đó **START OPERATION**.
 
 ## 🚀 Lộ trình phát triển (Roadmap)
 
-- [ ] **Auto Update:** Tự động tải bản mới từ GitHub.
-- [ ] **Scheduler:** Hẹn giờ tắt máy/dừng farm.
-- [ ] **Webhook:** Gửi thông báo về Discord/Telegram khi hoàn thành.
-- [ ] **Deep Integration:** Tích hợp Core MAA để chạy I.S trực tiếp trên giao diện này.
+- [ ] **Auto Recruit:** Tự động tuyển dụng công khai.
+- [ ] **Auto I.S:** Tự động chạy chế độ Integrated Strategies.
+- [ ] **Auto Update:** Tự động cập nhật phiên bản mới từ GitHub.
 
-## 🏗️ Công nghệ
+## 🏗️ Công nghệ sử dụng
 
 * **Frontend:** C# (WPF), HandyControl.
-* **Backend:** Python 3.10.
-* **Vision:** C++ (OpenCV).
+* **Logic Engine:** Python 3.10.
+* **Vision Core:** C++ (OpenCV).
 * **CI/CD:** GitHub Actions.
 
 ---
